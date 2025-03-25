@@ -42,6 +42,7 @@ Pliki nagłówkowe biblioteki SVT-JPEG-XS.
 
 %prep
 %setup -q -n SVT-JPEG-XS-%{version}
+%patch -P0 -p1
 
 %build
 install -d build
