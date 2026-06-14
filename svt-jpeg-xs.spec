@@ -68,16 +68,16 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc LICENSE.md README.md 
+%doc LICENSE.md README.md
 %attr(755,root,root) %{_bindir}/SvtJpegxsDecApp
 %attr(755,root,root) %{_bindir}/SvtJpegxsEncApp
 %attr(755,root,root) %{_bindir}/SvtJpegxsSampleDecoder
 %attr(755,root,root) %{_bindir}/SvtJpegxsSampleEncoder
-%attr(755,root,root) %{_libdir}/libSvtJpegxs.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libSvtJpegxs.so.0
+%{_libdir}/libSvtJpegxs.so.*.*.*
+%ghost %{_libdir}/libSvtJpegxs.so.0
 
 %files devel
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/libSvtJpegxs.so
+%{_libdir}/libSvtJpegxs.so
 %{_includedir}/svt-jpegxs
 %{_pkgconfigdir}/SvtJpegxs.pc
