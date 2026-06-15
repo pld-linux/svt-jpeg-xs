@@ -1,17 +1,23 @@
 # TODO: system cpuinfo (when released? note: different project than packaged in cpuinfo.spec)
+# NOTE: snapshot of the main branch - upstream has not tagged 0.10.0 yet, but
+# ffmpeg >= 8.1 requires SvtJpegxs >= 0.10.0 (the 0.9.0 release reports 0.9.0
+# and fails ffmpeg's pkg-config check). Switch Source0 back to a release tag
+# once upstream tags 0.10.0.
+%define		gitcommit	8e50180ad909a0bdcdf91b462c64033f0fe3e112
+%define		gitshort	%(echo %{gitcommit} | cut -c1-7)
 Summary:	Scalable Video Technology for JPEG-XS (SVT-JPEG-XS Encoder and Decoder)
 Summary(pl.UTF-8):	Scalable Video Technology dla JPEG-XS (koder i dekoder SVT-JPEG-XS)
 Name:		svt-jpeg-xs
-Version:	0.9.0
-Release:	1
+Version:	0.10.0
+Release:	0.20260519.1
 License:	BSD
 Group:		Libraries
 #Source0Download: https://github.com/OpenVisualCloud/SVT-JPEG-XS/releases
-Source0:	https://github.com/OpenVisualCloud/SVT-JPEG-XS/archive/v%{version}/SVT-JPEG-XS-%{version}.tar.gz
-# Source0-md5:	c9d92f9158927698e074d3658464952f
+Source0:	https://github.com/OpenVisualCloud/SVT-JPEG-XS/archive/%{gitcommit}/%{name}-%{version}-%{gitshort}.tar.gz
+# Source0-md5:	b735f2f34642e05d7c3c0f4084d90110
 Patch0:		%{name}-no-asm.patch
 URL:		https://github.com/OpenVisualCloud/SVT-JPEG-XS
-BuildRequires:	cmake >= 3.5
+BuildRequires:	cmake >= 3.10
 BuildRequires:	libstdc++-devel >= 6:4.7
 BuildRequires:	rpmbuild(macros) >= 1.605
 %ifarch %{x8664}
@@ -23,10 +29,17 @@ ExclusiveArch:	%{ix86} %{x8664} x32
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
-This library is implementation of ISO/IEC 21122 protocol.
+SVT-JPEG-XS (Scalable Video Technology for JPEG-XS) is an open-source
+JPEG-XS (ISO/IEC 21122) encoder and decoder library optimized for
+Intel architectures. JPEG-XS is a low-latency, visually lossless
+intra-frame codec for professional video transport.
 
 %description -l pl.UTF-8
-Ta biblioteka to implementacja protokołu ISO/IEC 21122.
+SVT-JPEG-XS (Scalable Video Technology dla JPEG-XS) to otwarta
+biblioteka kodera i dekodera JPEG-XS (ISO/IEC 21122), zoptymalizowana
+pod kątem architektur Intela. JPEG-XS to wewnątrzklatkowy kodek o
+małych opóźnieniach i wizualnie bezstratnej jakości, przeznaczony do
+profesjonalnego przesyłania obrazu.
 
 %package devel
 Summary:	Header files for SVT-JPEG-XS library
@@ -41,18 +54,16 @@ Header files for SVT-JPEG-XS library.
 Pliki nagłówkowe biblioteki SVT-JPEG-XS.
 
 %prep
-%setup -q -n SVT-JPEG-XS-%{version}
+%setup -q -n SVT-JPEG-XS-%{gitcommit}
 %patch -P0 -p1
 
 %build
-install -d build
-cd build
-%cmake .. \
+%cmake -B build \
 %ifnarch %{x8664}
 	-DDISABLE_ASM=ON
 %endif
 
-%{__make}
+%{__make} -C build
 
 %install
 rm -rf $RPM_BUILD_ROOT

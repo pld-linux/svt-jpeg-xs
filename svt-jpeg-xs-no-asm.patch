@@ -1,6 +1,6 @@
---- SVT-JPEG-XS-0.9.0/CMakeLists.txt.orig	2024-03-27 07:55:04.000000000 +0100
-+++ SVT-JPEG-XS-0.9.0/CMakeLists.txt	2025-03-24 19:53:06.965501855 +0100
-@@ -29,6 +29,11 @@ endif()
+--- SVT-JPEG-XS-0.10.0/CMakeLists.txt.orig
++++ SVT-JPEG-XS-0.10.0/CMakeLists.txt
+@@ -29,6 +29,11 @@
  
  include(CheckCSourceCompiles)
  
@@ -12,7 +12,7 @@
  find_program(YASM_EXE yasm)
  option(ENABLE_NASM "Use nasm if available (Uses yasm by default if found)" OFF)
  if(YASM_EXE AND NOT CMAKE_ASM_NASM_COMPILER MATCHES "yasm" AND NOT ENABLE_NASM)
-@@ -49,6 +54,8 @@ else()
+@@ -49,6 +54,8 @@
      endif()
  endif()
  enable_language(ASM_NASM)
@@ -21,50 +21,39 @@
  add_definitions(-DARCH_X86_64=1)
  
  include(GNUInstallDirs)
---- SVT-JPEG-XS-0.9.0/Source/Lib/Common/ASM_SSE2/CMakeLists.txt.orig	2024-03-27 07:55:04.000000000 +0100
-+++ SVT-JPEG-XS-0.9.0/Source/Lib/Common/ASM_SSE2/CMakeLists.txt	2025-03-24 19:53:57.885225999 +0100
-@@ -23,4 +23,6 @@ set(asm_files
+--- SVT-JPEG-XS-0.10.0/Source/Lib/Common/ASM_SSE2/CMakeLists.txt.orig
++++ SVT-JPEG-XS-0.10.0/Source/Lib/Common/ASM_SSE2/CMakeLists.txt
+@@ -23,4 +23,6 @@
  
  add_library(COMMON_ASM_SSE2 OBJECT ${all_files})
  
 +if(NOT DISABLE_ASM)
  asm_compile_to_target(COMMON_ASM_SSE2 ${asm_files})
 +endif()
---- SVT-JPEG-XS-0.9.0/Source/Lib/Encoder/ASM_SSE2/CMakeLists.txt.orig	2024-03-27 07:55:04.000000000 +0100
-+++ SVT-JPEG-XS-0.9.0/Source/Lib/Encoder/ASM_SSE2/CMakeLists.txt	2025-03-24 19:54:17.411786882 +0100
-@@ -22,4 +22,6 @@ set(asm_files
+--- SVT-JPEG-XS-0.10.0/Source/Lib/Encoder/ASM_SSE2/CMakeLists.txt.orig
++++ SVT-JPEG-XS-0.10.0/Source/Lib/Encoder/ASM_SSE2/CMakeLists.txt
+@@ -22,4 +22,6 @@
  
  add_library(ENCODER_ASM_SSE2 OBJECT ${all_files})
  
 +if(NOT DISABLE_ASM)
  asm_compile_to_target(ENCODER_ASM_SSE2 ${asm_files})
 +endif()
---- SVT-JPEG-XS-0.9.0/Source/Lib/Common/Codec/common_dsp_rtcd.c.orig	2024-03-27 07:55:04.000000000 +0100
-+++ SVT-JPEG-XS-0.9.0/Source/Lib/Common/Codec/common_dsp_rtcd.c	2025-03-24 19:55:31.151387400 +0100
-@@ -98,10 +98,12 @@ CPU_FLAGS get_cpu_flags() {
- #define SET_AVX2_AVX512(ptr, c, avx2, avx512)               SET_FUNCTIONS(ptr, c, 0, 0, 0, 0, 0, 0, 0, 0, avx2, avx512)
- 
- void setup_common_rtcd_internal(CPU_FLAGS flags) {
-+#ifndef DISABLE_X86_64_ASM
-     /* Avoid check that pointer is set double, after first  setup. */
-     static uint8_t first_call_setup = 1;
-     uint8_t check_pointer_was_set = first_call_setup;
-     first_call_setup = 0;
-+#endif
- #ifdef ARCH_X86_64
-     /** Should be done during library initialization,
-       but for safe limiting CPU flags again. */
-@@ -111,5 +113,7 @@ void setup_common_rtcd_internal(CPU_FLAG
+--- SVT-JPEG-XS-0.10.0/Source/Lib/Common/Codec/common_dsp_rtcd.c.orig
++++ SVT-JPEG-XS-0.10.0/Source/Lib/Common/Codec/common_dsp_rtcd.c
+@@ -111,5 +111,9 @@
      (void)flags;
  #endif
  
-+#ifndef DISABLE_X86_64_ASM
++#ifdef DISABLE_X86_64_ASM
++    SET_ONLY_C(svt_log2_32, log2_32_c);
++#else
      SET_SSE2(svt_log2_32, log2_32_c, Log2_32_ASM);
 +#endif
  }
---- SVT-JPEG-XS-0.9.0/Source/Lib/Encoder/ASM_AVX2/RateControl_avx2.c.orig	2025-03-24 19:57:56.130601980 +0100
-+++ SVT-JPEG-XS-0.9.0/Source/Lib/Encoder/ASM_AVX2/RateControl_avx2.c	2025-03-24 19:57:59.260585024 +0100
-@@ -101,6 +101,7 @@ uint32_t rate_control_calc_vpred_cost_no
+--- SVT-JPEG-XS-0.10.0/Source/Lib/Encoder/ASM_AVX2/RateControl_avx2.c.orig
++++ SVT-JPEG-XS-0.10.0/Source/Lib/Encoder/ASM_AVX2/RateControl_avx2.c
+@@ -101,6 +101,7 @@
      return pack_size_gcli_no_sigf;
  }
  
@@ -72,7 +61,7 @@
  void gc_precinct_stage_scalar_avx2(uint8_t *gcli_data_ptr, uint16_t *coeff_data_ptr_16bit, uint32_t group_size, uint32_t width) {
      UNUSED(group_size);
      assert(group_size == GROUP_SIZE);
-@@ -172,6 +173,7 @@ void gc_precinct_stage_scalar_avx2(uint8
+@@ -172,6 +173,7 @@
          }
      }
  }
@@ -80,23 +69,28 @@
  
  void convert_packed_to_planar_rgb_8bit_avx2(const void *in_rgb, void *out_comp1, void *out_comp2, void *out_comp3,
                                              uint32_t line_width) {
---- SVT-JPEG-XS-0.9.0/Source/Lib/Encoder/Codec/encoder_dsp_rtcd.c.orig	2024-03-27 07:55:04.000000000 +0100
-+++ SVT-JPEG-XS-0.9.0/Source/Lib/Encoder/Codec/encoder_dsp_rtcd.c	2025-03-24 19:58:41.513689452 +0100
-@@ -128,7 +128,9 @@ void setup_encoder_rtcd_internal(CPU_FLA
+--- SVT-JPEG-XS-0.10.0/Source/Lib/Encoder/Codec/encoder_dsp_rtcd.c.orig
++++ SVT-JPEG-XS-0.10.0/Source/Lib/Encoder/Codec/encoder_dsp_rtcd.c
+@@ -129,8 +129,12 @@
                      transform_vertical_loop_lf_hf_hf_line_last_even_avx2,
                      transform_vertical_loop_lf_hf_hf_line_last_even_avx512);
  
-+#ifndef DISABLE_X86_64_ASM
-     SET_AVX2(gc_precinct_stage_scalar, gc_precinct_stage_scalar_c, gc_precinct_stage_scalar_avx2);
++#ifdef DISABLE_X86_64_ASM
++    SET_ONLY_C(gc_precinct_stage_scalar, gc_precinct_stage_scalar_c);
++#else
+     SET_AVX2_AVX512(
+         gc_precinct_stage_scalar, gc_precinct_stage_scalar_c, gc_precinct_stage_scalar_avx2, gc_precinct_stage_scalar_avx512);
 +#endif
-     SET_SSE41_AVX2(quantization, quantization_c, quantization_sse4_1, quantization_avx2);
+     SET_SSE41_AVX2_AVX512(quantization, quantization_c, quantization_sse4_1, quantization_avx2, quantization_avx512);
      SET_AVX2_AVX512(linear_input_scaling_line_8bit,
                      linear_input_scaling_line_8bit_c,
-@@ -140,7 +142,9 @@ void setup_encoder_rtcd_internal(CPU_FLA
+@@ -142,7 +146,11 @@
                      linear_input_scaling_line_16bit_avx512);
  
      SET_AVX2_AVX512(pack_data_single_group, pack_data_single_group_c, NULL, pack_data_single_group_avx512);
-+#ifndef DISABLE_X86_64_ASM
++#ifdef DISABLE_X86_64_ASM
++    SET_ONLY_C(gc_precinct_stage_scalar_loop, gc_precinct_stage_scalar_loop_c);
++#else
      SET_SSE2(gc_precinct_stage_scalar_loop, gc_precinct_stage_scalar_loop_c, gc_precinct_stage_scalar_loop_ASM);
 +#endif
      SET_SSE41(gc_precinct_sigflags_max, gc_precinct_sigflags_max_c, gc_precinct_sigflags_max_sse4_1);
