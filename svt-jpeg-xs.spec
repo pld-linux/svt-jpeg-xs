@@ -1,32 +1,29 @@
 # TODO: system cpuinfo (when released? note: different project than packaged in cpuinfo.spec)
-# NOTE: snapshot of the main branch - upstream has not tagged 0.10.0 yet, but
-# ffmpeg >= 8.1 requires SvtJpegxs >= 0.10.0 (the 0.9.0 release reports 0.9.0
-# and fails ffmpeg's pkg-config check). Switch Source0 back to a release tag
-# once upstream tags 0.10.0.
-%define		gitcommit	8e50180ad909a0bdcdf91b462c64033f0fe3e112
-%define		gitshort	%(echo %{gitcommit} | cut -c1-7)
 Summary:	Scalable Video Technology for JPEG-XS (SVT-JPEG-XS Encoder and Decoder)
 Summary(pl.UTF-8):	Scalable Video Technology dla JPEG-XS (koder i dekoder SVT-JPEG-XS)
 Name:		svt-jpeg-xs
 Version:	0.10.0
-Release:	0.20260519.1
+Release:	1
 License:	BSD
 Group:		Libraries
 #Source0Download: https://github.com/OpenVisualCloud/SVT-JPEG-XS/releases
-Source0:	https://github.com/OpenVisualCloud/SVT-JPEG-XS/archive/%{gitcommit}/%{name}-%{version}-%{gitshort}.tar.gz
-# Source0-md5:	b735f2f34642e05d7c3c0f4084d90110
+Source0:	https://github.com/OpenVisualCloud/SVT-JPEG-XS/archive/v%{version}/%{name}-%{version}.tar.gz
+# Source0-md5:	319ec50626486089ec20fa171d332658
 Patch0:		%{name}-no-asm.patch
 URL:		https://github.com/OpenVisualCloud/SVT-JPEG-XS
-BuildRequires:	cmake >= 3.10
+BuildRequires:	cmake >= 3.13
 BuildRequires:	libstdc++-devel >= 6:4.7
 BuildRequires:	rpmbuild(macros) >= 1.605
 %ifarch %{x8664}
-# preferred by cmake; also nasm >= 2.13 possible
-BuildRequires:	yasm >= 1.2.0
+# preferred by cmake; also yasm >= 1.2.0 possible
+BuildRequires:	nasm >= 2.14
 %endif
 # other archs can be supported by removing ARCH_X86_64 define (which enables SIMD support via gcc intrinsics)
 ExclusiveArch:	%{ix86} %{x8664} x32
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
+
+# it defines -D_FORTIFY_SOURCE=3 on its own (as of 0.10.0)
+%define		filterout_c	-Wp,-D_FORTIFY_SOURCE=2
 
 %description
 SVT-JPEG-XS (Scalable Video Technology for JPEG-XS) is an open-source
@@ -45,7 +42,7 @@ profesjonalnego przesyłania obrazu.
 Summary:	Header files for SVT-JPEG-XS library
 Summary(pl.UTF-8):	Pliki nagłówkowe biblioteki SVT-JPEG-XS
 Group:		Development/Libraries
-Requires:	%{name} = %{version}-%{release}
+Requires:	%{name}%{?_isa} = %{version}-%{release}
 
 %description devel
 Header files for SVT-JPEG-XS library.
@@ -54,14 +51,11 @@ Header files for SVT-JPEG-XS library.
 Pliki nagłówkowe biblioteki SVT-JPEG-XS.
 
 %prep
-%setup -q -n SVT-JPEG-XS-%{gitcommit}
+%setup -q -n SVT-JPEG-XS-%{version}
 %patch -P0 -p1
 
 %build
-%cmake -B build \
-%ifnarch %{x8664}
-	-DDISABLE_ASM=ON
-%endif
+%cmake -B build
 
 %{__make} -C build
 
